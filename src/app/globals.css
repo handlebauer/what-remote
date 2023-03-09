@@ -45,3 +45,20 @@ a {
 .ant-select-selector {
   border-radius: 0 !important;
 }
+
+
+:where(.css-dev-only-do-not-override-1me4733).ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    position: relative;
+    color: #e9e9e9;
+    background-color: #323f52;
+    border: 1px solid #1e293b;
+    transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.ant-select.ant-select-focused.ant-select-single.ant-select-show-arrow.ant-select-open .ant-select-selection-item {
+  color: #e9e9e9;
+}
+
+.ant-select-selector::after {
+  background-color: white;
+}

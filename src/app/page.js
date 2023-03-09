@@ -7,6 +7,8 @@ import useSWR from 'swr'
 import { fetcher } from '../../lib/utils/fetcher.js'
 import Nav from './components/Nav.js'
 import { groupBy } from '../../lib/utils/group-by.js'
+import { days } from '../../lib/utils/days.js'
+import { months } from '../../lib/utils/months.js'
 
 /**
  * @typedef {Object} Event
@@ -21,9 +23,9 @@ import { groupBy } from '../../lib/utils/group-by.js'
 /** @typedef {{ [key: string]: Event[] }} EventsBy */
 
 /**
- * @param {{ filteredEvents: Event[] }}
+ * @param {{ filteredEvents: Event[], selections: { [key: string]: string } }}
  */
-function EventList({ filteredEvents }) {
+function EventList({ filteredEvents, selections }) {
   const eventsByDate = filteredEvents.reduce((acc, { channel, ...event }) => {
     const dateString = new Date(event.dateTime).toLocaleDateString()
     const existingChannels = acc[dateString]?.[event.name]?.channels || []
@@ -40,17 +42,34 @@ function EventList({ filteredEvents }) {
   }, {})
 
   return (
-    <div className='min-h-screen text-white'>
+    <div className='min-h-screen text-white '>
       {Object.entries(eventsByDate).map(([date, eventsByName]) => (
         <>
-          <h2 className='py-2 text-center' key={date}>
-            {date} - {Object.keys(eventsByName).length} events
-          </h2>
-          <ul className='p-3 space-y-3 text-[13px]'>
+          <div className='flex items-center justify-center w-full gap-2 py-3 pr-2 bg-slate-800 '>
+            <aside className='px-2 py-1 text-xs rounded bg-fuchsia-700 right-2'>
+              {days[new Date(date).getDay()]},{' '}
+              {months[new Date(date).getMonth()]} {new Date(date).getDay()}
+            </aside>
+            {selections.country !== '*' && (
+              <aside className='px-2 py-1 text-xs rounded bg-sky-600 right-2'>
+                {selections.country}
+              </aside>
+            )}
+            {selections.sport !== '*' && (
+              <aside className='px-2 py-1 text-xs bg-red-700 rounded right-2'>
+                {selections.sport}
+              </aside>
+            )}
+            <aside className='px-2 py-1 text-xs bg-green-700 rounded right-2'>
+              {Object.keys(eventsByName).length} events
+            </aside>
+          </div>
+          <div className='w-full h-0 border-b border-slate-600' />
+          <ul className='p-3 space-y-3 text-[13px] w-full'>
             {Object.entries(eventsByName).map(([name, event], i) => (
               <>
                 <li key={i} className='flex items-center w-full h-32 max-h-60'>
-                  <div className='flex flex-col items-center justify-center w-[50%] px-2'>
+                  <div className='flex flex-col items-center justify-center w-[55%] px-2'>
                     {name.split(' vs ').map((team, i) => (
                       <div key={i}>{team}</div>
                     ))}
@@ -59,7 +78,7 @@ function EventList({ filteredEvents }) {
                     {event.channels.map((channel, i) => (
                       <div
                         key={i}
-                        className='px-2 text-center py-[0.2rem] my-1 mr-2 w-min whitespace-nowrap rounded bg-slate-600'
+                        className='px-2 text-center py-[0.2rem] my-1 mr-2 w-min whitespace-nowrap overflow-clip max-w-[150px] text-ellipsis rounded bg-slate-600'
                       >
                         {channel}
                       </div>
@@ -201,7 +220,7 @@ function Home({ country, events }) {
         selections={selections}
         setSelections={setSelections}
       />
-      <EventList filteredEvents={filteredEvents} />
+      <EventList filteredEvents={filteredEvents} selections={selections} />
     </div>
   )
 }
