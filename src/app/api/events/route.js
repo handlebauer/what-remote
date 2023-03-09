@@ -9939,10 +9939,6 @@ const events = [
   dateTime: event.strTimeStamp || event.strTimestamp,
 }))
 
-console.log(events.filter(event => !event.channel).length)
-
 export const GET = async request => {
   return new Response(JSON.stringify(events))
 }
-
-const d = new Date('2022-10-27 16:45:00').toLocaleDateString()
