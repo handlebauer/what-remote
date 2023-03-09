@@ -24,27 +24,50 @@ import { groupBy } from '../../lib/utils/group-by.js'
  * @param {{ filteredEvents: Event[] }}
  */
 function EventList({ filteredEvents }) {
-  const eventsByDate = filteredEvents.reduce((acc, event) => {
+  const eventsByDate = filteredEvents.reduce((acc, { channel, ...event }) => {
     const dateString = new Date(event.dateTime).toLocaleDateString()
+    const existingChannels = acc[dateString]?.[event.name]?.channels || []
     return {
       ...acc,
-      [dateString]: [...(acc[dateString] || []), event],
+      [dateString]: {
+        ...acc[dateString],
+        [event.name]: {
+          ...event,
+          channels: [...existingChannels, channel],
+        },
+      },
     }
   }, {})
 
   return (
     <div className='min-h-screen text-white'>
-      {Object.keys(eventsByDate).map(date => (
+      {Object.entries(eventsByDate).map(([date, eventsByName]) => (
         <>
-          <h2
-            className='py-2 text-center border-y border-y-slate-500'
-            key={date}
-          >
-            {date} - {eventsByDate[date].length} events
+          <h2 className='py-2 text-center' key={date}>
+            {date} - {Object.keys(eventsByName).length} events
           </h2>
-          <ul className='p-3'>
-            {eventsByDate[date].map((event, i) => (
-              <li key={event.id + event.channel + i}>{event.name}</li>
+          <ul className='p-3 space-y-3 text-[13px]'>
+            {Object.entries(eventsByName).map(([name, event], i) => (
+              <>
+                <li key={i} className='flex items-center w-full h-32 max-h-60'>
+                  <div className='flex flex-col items-center justify-center w-[50%] px-2'>
+                    {name.split(' vs ').map((team, i) => (
+                      <div key={i}>{team}</div>
+                    ))}
+                  </div>
+                  <div>
+                    {event.channels.map((channel, i) => (
+                      <div
+                        key={i}
+                        className='px-2 text-center py-[0.2rem] my-1 mr-2 w-min whitespace-nowrap rounded bg-slate-600'
+                      >
+                        {channel}
+                      </div>
+                    ))}
+                  </div>
+                </li>
+                <div className='w-full h-1 border-b border-slate-600' />
+              </>
             ))}
           </ul>
         </>
@@ -91,32 +114,41 @@ function FilterControls({
     })
     .map(([channel]) => channel)
 
+  const handleSelection = kind => val => {
+    console.log(kind, val)
+    if (kind === 'country') {
+      setSelections({ country: val, sport: '*', channel: '*' })
+      return
+    }
+    if (kind === 'sport') {
+      console.log('got here')
+      setSelections(state => ({ ...state, sport: val, channel: '*' }))
+      return
+    }
+    setSelections(state => ({ ...state, [kind]: val }))
+    return
+  }
+
   return (
     <div>
       <Select
         defaultValue={selections.country}
         style={{ display: 'flex', flex: 1 }}
-        onChange={setSelections('country')}
+        onChange={handleSelection('country')}
       >
-        {filteredCountries.map(country => (
-          <Select.Option
-            key={byCountry[country][0].id + byCountry[country][0].country}
-            value={country}
-          >
+        {filteredCountries.map((country, i) => (
+          <Select.Option key={i} value={country}>
             {country}
           </Select.Option>
         ))}
       </Select>
       <Select
-        defaultValue={'Top Sports'}
+        defaultValue='Top Sports'
         style={{ display: 'flex', flex: 1 }}
-        onChange={setSelections('sport')}
+        onChange={handleSelection('sport')}
       >
         {filteredSports.map((sport, i) => (
-          <Select.Option
-            key={bySport[sport][i].id + bySport[sport][i].sport}
-            value={sport}
-          >
+          <Select.Option key={i} value={sport}>
             {sport}
           </Select.Option>
         ))}
@@ -124,13 +156,10 @@ function FilterControls({
       <Select
         defaultValue='All Channels'
         style={{ display: 'flex', flex: 1 }}
-        onChange={setSelections('channel')}
+        onChange={handleSelection('channel')}
       >
-        {filteredChannels.map(channel => (
-          <Select.Option
-            key={byChannel[channel].id + byChannel[channel].channel}
-            value={channel}
-          >
+        {filteredChannels.map((channel, i) => (
+          <Select.Option key={i} value={channel}>
             {channel}
           </Select.Option>
         ))}
@@ -170,8 +199,7 @@ function Home({ country, events }) {
         bySport={bySport}
         byChannel={byChannel}
         selections={selections}
-        setSelections={type => val =>
-          setSelections(state => ({ ...state, [type]: val }))}
+        setSelections={setSelections}
       />
       <EventList filteredEvents={filteredEvents} />
     </div>
